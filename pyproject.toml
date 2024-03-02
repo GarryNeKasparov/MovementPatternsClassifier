@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.11,<3.12"
 dvc = "^3.47.0"
 tensorflow-io-gcs-filesystem = "0.31.0"
-aws-fortuna = "^0.1.45"
+aws-fortuna = "0.1.40"
 pandas = "^2.2.1"
 numpy = "^1.26.4"
 torch = "^2.2.1"
@@ -21,6 +21,10 @@ seaborn = "^0.13.2"
 wandb = "^0.16.3"
 focal-loss-torch = "^0.1.2"
 pytorch-warmup = "^0.1.1"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+jax = "0.4.23"
+jaxlib = "0.4.23"
 
 
 [tool.poetry.group.dev.dependencies]

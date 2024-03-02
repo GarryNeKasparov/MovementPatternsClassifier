@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 import warnings
 from typing import List
 
@@ -9,6 +10,10 @@ from constants import (
     BATCH_SIZE,
     BLOCK_SIZE,
     INPUT_SIZE,
+)
+from models import (
+    GRU,
+    LSTM,
 )
 from torch.utils.data import (
     DataLoader,
@@ -126,15 +131,15 @@ def train_test_split_by_object(args) -> List[np.ndarray]:
     return X_train, y_train, X_calib, y_calib, X_val, y_val, X_test, y_test
 
 
-def train_test_split(df, sizes) -> List[np.ndarray]:
+def train_test_split(df, sizes):
     """
     Разделяет данные на обучающую, валидационную, калибрационную и тестовую выборки.
     df : pd.DataFrame - исходные данные.
     sizes : List[float] - размер train, calib, val (test получается автоматически).
     """
     results = process_map(
-        train_test_split,
-        [(df[df.object_id == k], k, 15, sizes) for k in df["object_id"].unique()],
+        train_test_split_by_object,
+        [(df[df.object_id == k], k, 60, sizes) for k in df["object_id"].unique()],
         max_workers=mp.cpu_count(),
     )
     X_train, y_train = np.concatenate(
@@ -149,7 +154,21 @@ def train_test_split(df, sizes) -> List[np.ndarray]:
     X_test, y_test = np.concatenate(
         [r[6] for r in results if len(r[6].shape) == 3]
     ), np.concatenate([r[7] for r in results])
-    return X_train, y_train, X_calib, y_calib, X_val, y_val, X_test, y_test
+    assert len(X_train) > 0, "train is empty!"
+    assert len(X_calib) > 0, "calib is empty!"
+    assert len(X_val) > 0, "val is empty!"
+    assert len(X_test) > 0, "test is empty!"
+    for arr, name in [
+        (X_train, "X_train.npy"),
+        (X_calib, "X_calib.npy"),
+        (X_val, "X_val.npy"),
+        (X_test, "X_test.npy"),
+        (y_train, "y_train.npy"),
+        (y_calib, "y_calib.npy"),
+        (y_val, "y_val.npy"),
+        (y_test, "y_test.npy"),
+    ]:
+        np.save(os.path.join("mpproject/models/files/splits", name), arr)
 
 
 class Data(Dataset):
@@ -165,54 +184,45 @@ class Data(Dataset):
         return self.X[idx], self.y[idx]
 
 
-def build_loaders(df, sizes) -> List[DataLoader]:
+def build_loader(split) -> List[DataLoader]:
     """
-    Возвращает dataloaders для каждой из частей выборки.
-    df : pd.DataFrame - исходные данные.
-    sizes : List[float] - размер train, calib, val (test получается автоматически).
+    Возвращает dataloader для указанной части выборки.
+    split : str - train/calib/val/test.
     """
-    (
-        X_train,
-        y_train,
-        X_calib,
-        y_calib,
-        X_val,
-        y_val,
-        X_test,
-        y_test,
-    ) = train_test_split(df, sizes)
+    assert split in {
+        "train",
+        "calib",
+        "val",
+        "test",
+    }, 'Split must be one of "train", "calib", "val", "test"'
+    X, y = np.load(
+        os.path.join("mpproject/models/files/splits", f"X_{split}.npy")
+    ), np.load(os.path.join("mpproject/models/files/splits", f"y_{split}.npy"))
+    data = Data(X, y)
+    loader = DataLoader(
+        data,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        pin_memory=True,
+        drop_last=True,
+    )
+    return loader
 
-    train_data = Data(X_train, y_train)
-    calib_data = Data(X_calib, y_calib)
-    val_data = Data(X_val, y_val)
-    test_data = Data(X_test, y_test)
 
-    train_loader = DataLoader(
-        train_data,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        pin_memory=True,
-        drop_last=True,
-    )
-    calib_loader = DataLoader(
-        calib_data,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        pin_memory=True,
-        drop_last=True,
-    )
-    val_loader = DataLoader(
-        val_data,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        pin_memory=True,
-        drop_last=True,
-    )
-    test_loader = DataLoader(
-        test_data,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        pin_memory=True,
-        drop_last=True,
-    )
-    return train_loader, calib_loader, val_loader, test_loader
+def get_model(name) -> torch.nn.Module:
+    """
+    Возвращает обученную модель.
+    name : str - LSTM/GRU.
+    """
+    assert name in {"LSTM", "GRU"}, 'Unknown models name. Must be one of "LSTM" or "GRU"'
+    assert os.path.exists(
+        f"mpproject/models/files/weights/{name}_trained.pt"
+    ), f"{name} model is not trained yet."
+    if name == "GRU":
+        model = GRU(3, 32, 2, [0.5, 0.5])
+    elif name == "LSTM":
+        model = LSTM(3, 32, 2, [0.5, 0.5])
+    else:
+        raise AssertionError("Unknown model")
+    model.load_state_dict(torch.load(f"mpproject/models/files/weights/{name}_trained.pt"))
+    return model
