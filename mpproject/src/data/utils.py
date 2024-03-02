@@ -32,9 +32,9 @@ def haversine(df) -> pd.Series:
     delt_x.loc[df["object_id"] != object_shift] = np.nan
     delt_y.loc[df["object_id"] != object_shift] = np.nan
 
-    a = np.square(np.sin(delt_x / 2)) + np.cos(x) * np.cos(
-        x_shift
-    ) * np.square(np.sin(delt_y / 2))
+    a = np.square(np.sin(delt_x / 2)) + np.cos(x) * np.cos(x_shift) * np.square(
+        np.sin(delt_y / 2)
+    )
     c = 2 * np.arcsin(np.sqrt(a))
     km = 6378.137 * c  # радиус Земли
     return km
@@ -108,10 +108,7 @@ def df_resample_total(df, freq) -> pd.DataFrame:
     agg_d = build_agg_dict(df.columns)
     results = process_map(
         df_resample_by_object,
-        [
-            (df[df["object_id"] == k], freq, agg_d)
-            for k in df["object_id"].unique()
-        ],
+        [(df[df["object_id"] == k], freq, agg_d) for k in df["object_id"].unique()],
         max_workers=mp.cpu_count(),
     )
     df = pd.concat(results)
@@ -133,9 +130,7 @@ class DBSCANDetector:
         Вычисляет наиболее вероятное значение eps, используя метод
         ближайших соседей.
         """
-        neighbors = NearestNeighbors(
-            n_neighbors=n_neighbors, metric="haversine"
-        )
+        neighbors = NearestNeighbors(n_neighbors=n_neighbors, metric="haversine")
         neighbors_fit = neighbors.fit(data)
         distances, _ = neighbors_fit.kneighbors(data)
         distances = np.sort(distances, axis=0)

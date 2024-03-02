@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from setup import (
+from path_constants import (
     INITIAL_DATA_PATH,
     PREPARED_DATA_PATH,
 )

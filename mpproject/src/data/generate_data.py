@@ -8,7 +8,7 @@ from datetime import (
 
 import numpy as np
 import pandas as pd
-from setup import INITIAL_DATA_PATH
+from path_constants import INITIAL_DATA_PATH
 
 
 def generate_random_dataset(num_rows):
@@ -32,12 +32,8 @@ def generate_random_dataset(num_rows):
         velocity = round(random.uniform(0, 40), 2)
         velocities.append(velocity)
 
-        x = random.uniform(
-            40 + (object_id * 27 % 20), 43 + (object_id * 27 % 20)
-        )
-        y = random.uniform(
-            120 + (object_id * 27 % 20), 123 + (object_id * 27 % 20)
-        )
+        x = random.uniform(40 + (object_id * 27 % 20), 43 + (object_id * 27 % 20))
+        y = random.uniform(120 + (object_id * 27 % 20), 123 + (object_id * 27 % 20))
         xs.append(x)
         ys.append(y)
 
