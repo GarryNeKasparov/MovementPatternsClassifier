@@ -23,9 +23,9 @@ def generate_random_dataset(num_rows):
         object_id = random.randint(1, 20)
         object_ids.append(object_id)
 
-        start_date = datetime.now() - timedelta(weeks=random.randint(180, 210))
+        start_date = datetime.now() - timedelta(weeks=random.randint(180, 185))
         random_time = start_date + timedelta(
-            minutes=random.randint(0, 10), hours=random.randint(0, 30)
+            minutes=random.randint(0, 10), hours=random.randint(0, 5)
         )
         times.append(random_time.isoformat(sep=" ", timespec="seconds"))
 
