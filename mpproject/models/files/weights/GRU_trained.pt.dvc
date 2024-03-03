@@ -1,0 +1,5 @@
+outs:
+- md5: 8ed8f5359ec7d12daf5dc693f39dbf67
+  size: 47671
+  hash: md5
+  path: GRU_trained.pt

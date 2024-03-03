@@ -11,6 +11,10 @@ from constants import (
     BLOCK_SIZE,
     INPUT_SIZE,
 )
+from models import (
+    GRU,
+    LSTM,
+)
 from torch.utils.data import (
     DataLoader,
     Dataset,
@@ -203,3 +207,22 @@ def build_loader(split) -> List[DataLoader]:
         drop_last=True,
     )
     return loader
+
+
+def get_model(name) -> torch.nn.Module:
+    """
+    Возвращает обученную модель.
+    name : str - LSTM/GRU.
+    """
+    assert name in {"LSTM", "GRU"}, 'Unknown models name. Must be one of "LSTM" or "GRU"'
+    assert os.path.exists(
+        f"mpproject/models/files/weights/{name}_trained.pt"
+    ), f"{name} model is not trained yet."
+    if name == "GRU":
+        model = GRU(3, 32, 2, [0.5, 0.5])
+    elif name == "LSTM":
+        model = LSTM(3, 32, 2, [0.5, 0.5])
+    else:
+        raise AssertionError("Unknown model")
+    model.load_state_dict(torch.load(f"mpproject/models/files/weights/{name}_trained.pt"))
+    return model

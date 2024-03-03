@@ -33,7 +33,7 @@ def generate_random_dataset(num_rows):
         velocities.append(velocity)
 
         x = random.uniform(40 + (object_id * 27 % 20), 43 + (object_id * 27 % 20))
-        y = random.uniform(120 + (object_id * 27 % 20), 123 + (object_id * 27 % 20))
+        y = random.uniform(30 + (object_id * 27 % 20), 33 + (object_id * 27 % 20))
         xs.append(x)
         ys.append(y)
 
