@@ -8,7 +8,8 @@ from datetime import (
 
 import numpy as np
 import pandas as pd
-from path_constants import INITIAL_DATA_PATH
+
+from mpproject.src.data.path_constants import INITIAL_DATA_PATH
 
 
 def generate_random_dataset(num_rows):
