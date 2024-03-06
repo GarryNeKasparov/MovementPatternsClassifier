@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type classifier</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            color: white;
+
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        #pred {
+            max-width: 100%;
+            display: block;
+            margin-top: -100%;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #message {
+            margin-top: 10px;
+            font-style: italic;
+            color: #f00;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Object type classifier</h1>
+        <form action="/generated" method="post">
+            <button type="submit">Regenerate</button>
+        </form>
+        <form id="predictionForm">
+            <input name="models" type="radio" id="gru" value="GRU">
+            <label for="gru">GRU</label>
+            <input name="models" type="radio" id="lstm" value="LSTM">
+            <label for="lstm">LSTM</label>
+            <div class="button-container">
+                <button type="button" onclick="send()">Predict</button>
+            </div>
+        </form>
+        <table>
+            <tr>
+                <td>
+                    <div id="df">{{ df.to_html() | safe}}</div>
+                </td>
+                <td>
+                    <img id="pred">
+                    <div id="message"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        async function send() {
+            const df = document.getElementById("df").innerHTML;
+            const model = document.querySelector('input[name="models"]:checked').value;
+            document.getElementById("message").textContent = "";
+            document.getElementById("pred").src = "";
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    df: df,
+                    modelname: model,
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status != "ok") {
+                    document.getElementById("message").textContent = data.message;
+
+                } else {
+                    document.getElementById("pred").src = "data:image/png;base64," + data.plot;
+                    document.getElementById("df").innerHTML = data.df;
+                }
+            } else
+                console.log(response);
+
+        }
+    </script>
+</body>
+
+</html>

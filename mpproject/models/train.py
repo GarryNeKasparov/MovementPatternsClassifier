@@ -178,17 +178,17 @@ if __name__ == "__main__":
         "dropout": [0.5, 0.5],
         "epochs": 3,
     }
-    # wandb.init(
-    #     project="mpproject",
-    #     config={
-    #         "optimizer": "AdamW",
-    #         "criterion": "FocalLoss",
-    #         "learning_rate": params["learning_rate"],
-    #         "architecture": f'GRU, hidden={params["hidden_size"]}, \
-    #         layers={params["num_layers"]}, dropout={params["dropout"]}',
-    #         "epochs": params["epochs"],
-    #     },
-    # )
+    wandb.init(
+        project="mpproject",
+        config={
+            "optimizer": "AdamW",
+            "criterion": "FocalLoss",
+            "learning_rate": params["learning_rate"],
+            "architecture": f'GRU, hidden={params["hidden_size"]}, \
+            layers={params["num_layers"]}, dropout={params["dropout"]}',
+            "epochs": params["epochs"],
+        },
+    )
 
     train_loader, val_loader = build_loader("train"), build_loader("val")
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         checkpoint_step=1000,
         wb=False,
     )
-    # wandb.finish()
+    wandb.finish()
     torch.save(
         model.state_dict(),
         os.path.join("mpproject/models/files/weights/", "GRU_trained.pt"),

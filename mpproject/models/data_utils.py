@@ -6,20 +6,21 @@ from typing import List
 import numpy as np
 import pandas as pd
 import torch
-from constants import (
-    BATCH_SIZE,
-    BLOCK_SIZE,
-    INPUT_SIZE,
-)
-from models import (
-    GRU,
-    LSTM,
-)
 from torch.utils.data import (
     DataLoader,
     Dataset,
 )
 from tqdm.contrib.concurrent import process_map
+
+from mpproject.models.constants import (
+    BATCH_SIZE,
+    BLOCK_SIZE,
+    INPUT_SIZE,
+)
+from mpproject.models.models import (
+    GRU,
+    LSTM,
+)
 
 
 def distance(x: np.ndarray) -> np.ndarray:
@@ -41,6 +42,13 @@ def get_path_pattern(x: np.ndarray) -> np.ndarray:
     """
     Рассчитывает базис и возвращает координаты точек в нем.
     """
+    if isinstance(x, list):
+        x = np.asarray(x, dtype=np.float32)
+    elif not isinstance(x, np.ndarray):
+        raise TypeError("x must be a list or a numpy array")
+    if len(x) == 0:
+        return np.asarray([0, 0])
+    # print(x)
     max_d = np.argmax(distance(x))
     v1 = x[max_d] - x[0]
     if np.linalg.norm(v1) == 0:
@@ -131,7 +139,7 @@ def train_test_split_by_object(args) -> List[np.ndarray]:
     return X_train, y_train, X_calib, y_calib, X_val, y_val, X_test, y_test
 
 
-def train_test_split(df, sizes):
+def train_test_split(df, sizes) -> List[np.ndarray]:
     """
     Разделяет данные на обучающую, валидационную, калибрационную и тестовую выборки.
     df : pd.DataFrame - исходные данные.
@@ -216,7 +224,7 @@ def get_model(name) -> torch.nn.Module:
     """
     assert name in {"LSTM", "GRU"}, 'Unknown models name. Must be one of "LSTM" or "GRU"'
     assert os.path.exists(
-        f"mpproject/models/files/weights/{name}_trained.pt"
+        os.path.join("mpproject", "models", "files", "weights", f"{name}_trained.pt")
     ), f"{name} model is not trained yet."
     if name == "GRU":
         model = GRU(3, 32, 2, [0.5, 0.5])
@@ -224,5 +232,9 @@ def get_model(name) -> torch.nn.Module:
         model = LSTM(3, 32, 2, [0.5, 0.5])
     else:
         raise AssertionError("Unknown model")
-    model.load_state_dict(torch.load(f"mpproject/models/files/weights/{name}_trained.pt"))
+    model.load_state_dict(
+        torch.load(
+            os.path.join("mpproject", "models", "files", "weights", f"{name}_trained.pt")
+        )
+    )
     return model
